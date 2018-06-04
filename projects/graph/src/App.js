@@ -169,25 +169,98 @@ class GraphView extends Component {
    * Render the canvas
    */
   updateCanvas() {
-    let canvas = this.refs.canvas;
-    let ctx = canvas.getContext('2d');
+    const ctx = this.ctx;
 
-    // Clear it
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    this.clearCanvas();
 
-    // !!! IMPLEMENT ME
-    // compute connected components
-    // draw edges
-    // draw verts
-    // draw vert values (labels)
+    this.props.graph.getConnectedComponents();
+
+    if (this.selected.length === 2) {
+      let firstSelected, secondSelected;
+      for (let vertex of this.props.graph.vertexes) {
+        if (vertex.value === this.selected[0].value) {
+          firstSelected = vertex;
+        } else if (vertex.value === this.selected[1].value) {
+          secondSelected = vertex;
+        }
+      }
+      this.path = this.props.graph.dijkstra(firstSelected, secondSelected);
+    }
+
+    ctx.lineWidth = 2;
+    for (let vertex of this.props.graph.vertexes) {
+      for (let edge of vertex.edges) {
+        const offX = (edge.destination.pos.x - vertex.pos.x) / 2;
+        const offY = (edge.destination.pos.y - vertex.pos.y) / 2;
+        ctx.beginPath();
+        ctx.moveTo(vertex.pos.x, vertex.pos.y);
+        ctx.lineTo(edge.destination.pos.x, edge.destination.pos.y);
+        ctx.strokeStyle = vertex.color;
+        if (this.path) {
+          if (edge.destination.value === this.path[vertex.value]) {
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 4;
+          } else if (vertex.value === this.path[edge.destination.value]) {
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 4;
+          } else {
+            ctx.lineWidth = 2;
+          }
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(vertex.pos.x + offX, vertex.pos.y + offY, 9, 0, 2 * Math.PI);
+        ctx.fillStyle = 'grey';
+        ctx.strokeStyle = 'teal';
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = 'black';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(edge.weight, vertex.pos.x + offX, vertex.pos.y + offY);
+      }
+    }
+
+    for (let vertex of this.props.graph.vertexes) {
+      ctx.beginPath();
+      ctx.arc(vertex.pos.x, vetex.pos.y, vertexRadius, 0, 2 * Math.PI);
+      ctx.fillStyle = vertex.color;
+      ctx.fill();
+
+      if (this.isSelected(vertex)) {
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'black';
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = 'black';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(vertex.value, vertex.pos.x, vertex.pos.y);
+    }
   }
 
   /**
    * Render
    */
   render() {
-    return <canvas ref="canvas" width={canvasWidth} height={canvasHeight} />;
+    return (
+      <React.Fragment>
+        <canvas ref="canvas" width={canvasWidth} height={canvasHeight} />
+        <button
+          onClick={() => {
+            this.clearSelected();
+            this.props.regenerate();
+          }}
+        >
+          Regenerate
+        </button>
+      </React.Fragment>
+    );
   }
 }
 
@@ -202,9 +275,21 @@ class App extends Component {
       graph: new Graph(),
     };
 
+    this.randomize();
+
     // !!! IMPLEMENT ME
     // use the graph randomize() method
   }
+
+  regenerate = () => {
+    this.state.graph.refresh();
+    this.componentDidCatch.randomoze();
+    this.forceUpdate();
+  };
+
+  randomize = () => {
+    this.state.graph.randomize(6, 5, 140, 0.25);
+  };
 
   render() {
     return (
