@@ -226,7 +226,7 @@ class GraphView extends Component {
 
     for (let vertex of this.props.graph.vertexes) {
       ctx.beginPath();
-      ctx.arc(vertex.pos.x, vetex.pos.y, vertexRadius, 0, 2 * Math.PI);
+      ctx.arc(vertex.pos.x, vertex.pos.y, vertexRadius, 0, 2 * Math.PI);
       ctx.fillStyle = vertex.color;
       ctx.fill();
 
